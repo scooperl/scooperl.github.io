@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<meta charset="tf-8">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v6.js"></script>
+
+<!-- Create a Title for entire Page-->
+<h2>Player Performances: Non-Foreign vs. Foreign</h2>
+<!-- Create a div where the graph will live-->
+<div class="float-container"> 
+    <div class="child"> 
+        <h3>Premier League Player Performance</h3>
+        <div id="chart1"></div>
+    </div>
+    <div class="child"> 
+        <h3>La Liga Player Performance</h3>
+        <div id="chart2"></div> 
+    </div>
+</div>
+
+<script>
+    // Set the dimensions and margins of the graph
+    const margin ={top: 20, right: 30, bottom: 45, left: 60},
+            width = 600 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+    const svg1 = d3.select("#chart1")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+
+    const svg2 = d3.select("#chart2")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    
+    // Read in the data for Premier League 
+    d3.csv("prem_player_stats_modified.csv",function(d){
+        return {
+            mins: +d['Min'],
+            npxG_xAG: +d['npxG+xAG'],
+            g_a: +d['G+A'],
+            player: d['Player'],
+            foreign: d['Foreign']
+        }
+    })
+    .then(function(data){
+        // Add X Scale
+        const x = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.mins)])
+                    .range([0, width]);
+
+        // Add Y Scale
+        const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.npxG_xAG)])
+                    .range([height,0]);
+
+        // Add Z Scale
+        const z = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.g_a)])
+                    .range([1,10])
+            
+        // Categorical Color Scale
+        const color = d3.scaleOrdinal()
+                        .domain(data.map(d => d.foreign))
+                        .range(["#4c7ca4", "#59a14f"])
+
+        var tooltip = d3.select("#chart1")
+                        .append("div")
+                        .style("position", "absolute")
+                        .style("visibility", "hidden")
+        // Add axes
+        svg1.append("g")
+            .attr("transform", `translate(0, ${height})`)
+            .call(d3.axisBottom(x));
+
+        svg1.append("g")
+            .call(d3.axisLeft(y));
+
+        svg1.append('g')
+            .selectAll("dot")
+            .data(data)
+            .join("circle")
+                .attr("cx", function(d) { return x(d.mins);})
+                .attr("cy", function(d) { return y(d.npxG_xAG);})
+                .attr("r", function(d) { return z(d.g_a);})
+                .style("fill", function(d) { return color(d.foreign);})
+                .attr("stroke", "#000000")
+                .on("mouseover", function (e,d) { 
+                    var foreign_str = ""
+                    if (d.foreign) {
+                        foreign_str = "Foreign"
+                    } else { 
+                        foreign_str  = "Non-Foreign"
+                    }
+                    return tooltip.style("visibility", "visible").html(d.player + " (" + foreign_str + ")" + "-  " + d.mins + " Mins    " + d.g_a + " G+A"); }
+                )
+                .on("mousemove", function () { return tooltip;
+                                            })
+                .on("mouseout", function () { return tooltip.style("visibility", "hidden"); })
+
+            
+    })
+
+    // Read in the data for La Liga
+    d3.csv("laliga_player_stats_modified.csv",function(d){
+        return {
+            mins: +d['Min'],
+            npxG_xAG: +d['npxG+xAG'],
+            g_a: +d['G+A'],
+            player: d['Player'],
+            foreign: d['Foreign']
+        }
+    })
+    .then(function(data){
+        // Add X Scale
+        const x = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.mins)])
+                    .range([0, width]);
+
+        // Add Y Scale
+        const y = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.npxG_xAG)])
+                    .range([height,0]);
+
+        // Add Z Scale
+        const z = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.g_a)])
+                    .range([1,10])
+            
+        // Categorical Color Scale
+        const color = d3.scaleOrdinal()
+                        .domain(data.map(d => d.foreign))
+                        .range(["#4c7ca4", "#59a14f"])
+
+        var tooltip = d3.select("#chart2")
+                        .append("div")
+                        .style("position", "absolute")
+                        .style("visibility", "hidden")
+        // Add axes
+        svg2.append("g")
+            .attr("transform", `translate(0, ${height})`)
+            .call(d3.axisBottom(x));
+
+        svg2.append("g")
+            .call(d3.axisLeft(y));
+
+        svg2.append('g')
+            .selectAll("dot")
+            .data(data)
+            .join("circle")
+                .attr("cx", function(d) { return x(d.mins);})
+                .attr("cy", function(d) { return y(d.npxG_xAG);})
+                .attr("r", function(d) { return z(d.g_a);})
+                .style("fill", function(d) { return color(d.foreign);})
+                .attr("stroke", "#000000")
+                .on("mouseover", function (e,d) { 
+                    var foreign_str = ""
+                    if (d.foreign) {
+                        foreign_str = "Foreign"
+                    } else { 
+                        foreign_str  = "Non-Foreign"
+                    }
+                    return tooltip.style("visibility", "visible").html(d.player + " (" + foreign_str + ")" + "-  " + d.mins + " Mins    " + d.g_a + " G+A"); }
+                )
+                .on("mousemove", function () { return tooltip;
+                                            })
+                .on("mouseout", function () { return tooltip.style("visibility", "hidden"); })
+
+    }) 
+</script>
